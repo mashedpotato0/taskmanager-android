@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>FocusGrid</title>
+    <link rel="stylesheet" href="css/main.css">
+    <script src="js/chart.js"></script>
+</head>
+<body>
+
+<div class="app-header">
+    <div class="header-content">
+        <div class="date-nav" id="headerNav">
+            <button id="btnPrev" class="nav-arrow">❮</button>
+            <div class="date-display">
+                <span id="lblMain">Loading...</span>
+                <span id="lblSub" class="sub-text">...</span>
+            </div>
+            <button id="btnNext" class="nav-arrow">❯</button>
+        </div>
+
+        <div id="staticTitle" style="display:none; font-weight:bold; font-size:1.2rem;">
+            Manage
+        </div>
+
+        <div id="headerScore" class="daily-score">0%</div>
+    </div>
+</div>
+
+<div class="app-content" id="mainContent">
+
+    <div id="viewTasks" class="view-section active">
+        <div id="taskList" class="task-container">
+            <div style="padding: 20px; text-align: center; color: #666;">Loading tasks...</div>
+        </div>
+        <div style="height: 100px;"></div>
+    </div>
+
+    <div id="viewStats" class="view-section" style="display:none;">
+        <div class="chart-card">
+            <h3>Efficiency</h3>
+            <div class="chart-container"><canvas id="scoreChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+            <h3>Sleep & Wake</h3>
+            <div class="chart-container"><canvas id="timeChart"></canvas></div>
+        </div>
+        <div style="height: 100px;"></div>
+    </div>
+
+    <div id="viewSettings" class="view-section" style="display:none;">
+        <div class="settings-header">
+            <h3>Manage Tasks</h3>
+            <button id="btnAdd" class="btn-primary">+ Add</button>
+        </div>
+        <div id="settingsList" class="settings-list"></div>
+        <div style="height: 100px;"></div>
+    </div>
+</div>
+
+<div class="bottom-nav">
+    <button class="nav-item active" data-target="viewTasks">
+        <div class="icon">📝</div>
+        <span>Tasks</span>
+    </button>
+    <button class="nav-item" data-target="viewStats">
+        <div class="icon">📊</div>
+        <span>Stats</span>
+    </button>
+    <button class="nav-item" data-target="viewSettings">
+        <div class="icon">⚙️</div>
+        <span>Manage</span>
+    </button>
+</div>
+
+<div id="configModal" class="modal-overlay">
+    <div class="modal-content">
+        <h3>Edit Task</h3>
+        <input type="hidden" id="editIndex">
+
+        <label>Task Name</label>
+        <input type="text" id="inpName" class="full-width">
+
+        <div class="row">
+            <div>
+                <label>Weight</label>
+                <input type="number" id="inpWeight" value="10">
+            </div>
+            <div>
+                <label>Type</label>
+                <select id="inpType">
+                    <option value="bool">Checkbox</option>
+                    <option value="time">Time</option>
+                    <option value="score">Score</option>
+                </select>
+            </div>
+        </div>
+
+        <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:8px; margin-bottom:15px;">
+            <label style="color:var(--accent); margin-bottom:10px;">Schedule</label>
+            <div class="row" style="margin-bottom:10px;">
+                <label style="display:flex; align-items:center; gap:5px;"><input type="radio" name="freq" id="radioRepeat" checked> Repeating</label>
+                <label style="display:flex; align-items:center; gap:5px;"><input type="radio" name="freq" id="radioOnce"> One-time</label>
+            </div>
+            <div id="divRepeatInputs">
+                <div class="row">
+                    <div><label>Start</label><input type="date" id="inpStart"></div>
+                    <div><label>End</label><input type="date" id="inpEnd"></div>
+                </div>
+                <label>Repeat On:</label>
+                <div class="day-selector">
+                    <span class="day-opt" data-d="Mon">M</span><span class="day-opt" data-d="Tue">T</span><span class="day-opt" data-d="Wed">W</span>
+                    <span class="day-opt" data-d="Thu">T</span><span class="day-opt" data-d="Fri">F</span><span class="day-opt" data-d="Sat">S</span><span class="day-opt" data-d="Sun">S</span>
+                </div>
+            </div>
+            <div id="divOnceInputs" style="display:none;">
+                <label>Date</label><input type="date" id="inpSpecificDate" class="full-width">
+            </div>
+        </div>
+
+        <div id="timeFields" style="display:none;">
+            <label>Target Time</label>
+            <input type="time" id="inpTarget" class="full-width">
+            <select id="inpCondition" class="full-width" style="margin-top:5px">
+                <option value="before">Before Target</option>
+                <option value="after">After Target</option>
+            </select>
+        </div>
+
+        <div class="modal-actions">
+            <button id="btnCancelForm" class="btn-sec">Cancel</button>
+            <button id="btnSaveTask" class="btn-pri">Save</button>
+        </div>
+    </div>
+</div>
+
+<script src="js/app.js"></script>
+</body>
+</html>
