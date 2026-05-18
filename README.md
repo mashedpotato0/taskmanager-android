@@ -65,5 +65,4 @@ You can preview the app on your PC browser by running:
 
 ```bash
 ./start.sh
-# or manually: python3 run_app.py
 ```
