@@ -1,12 +1,19 @@
-# Task Manager Android
+# FocusGrid (Task Manager Android)
 
-A mobile task management app built with web technologies (HTML/CSS/JS) and packaged as a native Android application using [Capacitor](https://capacitorjs.com/).
+A standalone, privacy-focused mobile habit and task management application built with web technologies (HTML/CSS/JS) and packaged natively for Android using [Capacitor](https://capacitorjs.com/).
 
 ## Features
 
-- Create, view, and manage tasks on Android
-- Native Android app experience powered by Capacitor
-- Web-first codebase (`www/`) that runs in any browser too
+- **100% Offline & Private:** All data is strictly kept on-device using local storage. No server sync or external backend required.
+- **Advanced Task Types:**
+  - **Boolean:** Simple checkbox habits (e.g., Reading, Gym).
+  - **Time:** Set target times with conditions ("Before" or "After").
+  - **Score:** Set custom max scores with options to cap them or allow percentage overflow.
+- **Dynamic Stats & Charting:**
+  - **Sleep & Wake Tracking:** A dedicated chart combining sleep and wake times, including a smart visual crossover fix for times extending past midnight.
+  - **Tracked Stats:** Automatically generates isolated graphs for any score tasks you choose to track visually.
+  - **Daily Efficiency Score:** A calculated percentage grade based on your habit weightings.
+- **Automated Compilation Pipeline:** Custom shell scripts automatically pull the Android SDK, sync web assets, and build your release-ready APK.
 
 ## Tech Stack
 
@@ -14,7 +21,7 @@ A mobile task management app built with web technologies (HTML/CSS/JS) and packa
 |---|---|
 | App Framework | Capacitor 8 |
 | Platform | Android |
-| Frontend | HTML, CSS, JavaScript |
+| Frontend | Vanilla HTML, CSS, JavaScript (Chart.js) |
 | Runtime | WebView (Android) |
 
 ## Project Structure
@@ -26,44 +33,37 @@ taskmanager-android/
 │   ├── css/
 │   └── js/
 ├── android/              # Native Android project (Gradle)
-├── capacitor.config.json # Capacitor configuration
-├── package.json
-├── run_app.py            # Helper script to build & run
-├── start.sh              # Linux build/run script
-└── start.bat             # Windows build/run script
+├── local_sdk/            # Auto-downloaded Android SDK build tools
+├── build_env.sh          # SDK Environment variables
+├── compile.sh            # Master script to compile the debug APK
+├── run_app.py            # Local desktop test server
+├── start.sh              # Local desktop launch script
+└── package.json
 ```
 
-## Setup
+## Compilation & Build
 
-### Prerequisites
-
-- Node.js
-- Android Studio + Android SDK
-- Java 17+
-
-### Install dependencies
+To generate the Android `.apk` directly on your machine without Android Studio:
 
 ```bash
-npm install
+chmod +x compile.sh
+./compile.sh
 ```
 
-### Run on Android
+This master script will:
+1. Source `build_env.sh` (Downloading the Android SDK tools locally if missing).
+2. Install npm dependencies.
+3. Sync the `www/` web assets to the native Android framework via Capacitor.
+4. Use Gradle to assemble the debug APK.
+
+Once complete, your compiled application will be located at:
+`android/app/build/outputs/apk/debug/app-debug.apk`
+
+## Local Desktop Testing
+
+You can preview the app on your PC browser by running:
 
 ```bash
-# Using the helper script
-bash start.sh
-
-# Or manually
-npx cap sync android
-npx cap open android
+./start.sh
+# or manually: python3 run_app.py
 ```
-
-Then build and run the project from Android Studio, or use:
-
-```bash
-npx cap run android
-```
-
-### Run in browser (development)
-
-Open `www/index.html` directly in your browser, or serve it with any static file server.
