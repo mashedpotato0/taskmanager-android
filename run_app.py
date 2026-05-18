@@ -7,22 +7,23 @@ import threading
 import time
 import sys
 
-# Ensure we are serving files from the directory where this script is located
-os.chdir(os.path.dirname(os.path.abspath(__file__)))
+# serve www
+base_dir = os.path.dirname(os.path.abspath(__file__))
+os.chdir(os.path.join(base_dir, 'www'))
 
 PORT = 8000
-DATA_FILE = 'data.json'
-# Server shuts down if no heartbeat received for this many seconds
+DATA_FILE = '../data.json'
+# timeout
 HEARTBEAT_TIMEOUT = 4
 last_heartbeat = time.time()
 
 class FocusGridHandler(http.server.SimpleHTTPRequestHandler):
     def log_message(self, format, *args):
-        pass # Silence console logs
+        pass # no logs
 
     def do_GET(self):
-        # Serve the data file when requested
-        if self.path == 'data.json':
+        # serve data
+        if self.path == '/data.json':
             if os.path.exists(DATA_FILE):
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')
@@ -33,26 +34,26 @@ class FocusGridHandler(http.server.SimpleHTTPRequestHandler):
                 self.send_response(404)
                 self.end_headers()
         else:
-            # Serve normal HTML/JS/CSS files
+            # static files
             super().do_GET()
 
     def do_POST(self):
         global last_heartbeat
 
-        # 1. Heartbeat Endpoint
+        # heartbeat
         if self.path == '/heartbeat':
             last_heartbeat = time.time()
             self.send_response(200)
             self.end_headers()
             return
 
-        # 2. Save Endpoint
+        # save
         if self.path == '/save':
             try:
                 content_length = int(self.headers['Content-Length'])
                 post_data = self.rfile.read(content_length)
 
-                # Verify it's valid JSON before saving
+                # verify json
                 json.loads(post_data)
 
                 with open(DATA_FILE, 'wb') as f:
@@ -76,20 +77,20 @@ def monitor_heartbeat(server):
             server.shutdown()
             break
 
-# Allow reusing the port if you restart quickly
+# reuse port
 socketserver.TCPServer.allow_reuse_address = True
 
 print(f"[*] FocusGrid is running.")
 print(f"[*] Close the browser window to stop the app.")
 
-# Open the specific file directly
-target_url = f'http://localhost:{PORT}/task.html'
+# open index
+target_url = f'http://localhost:{PORT}/'
 
-# Small delay to ensure server starts before browser hits it
+# delay open
 threading.Timer(0.5, lambda: webbrowser.open(target_url)).start()
 
 with socketserver.TCPServer(("", PORT), FocusGridHandler) as httpd:
-    # Start heartbeat monitor in background
+    # start monitor
     monitor_thread = threading.Thread(target=monitor_heartbeat, args=(httpd,))
     monitor_thread.daemon = True
     monitor_thread.start()

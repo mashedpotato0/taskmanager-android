@@ -31,6 +31,7 @@
 <div class="app-content" id="mainContent">
 
     <div id="viewTasks" class="view-section active">
+        <div id="dailyIndicators" style="display:flex; justify-content:center; gap:10px; padding:10px; margin-bottom:5px;"></div>
         <div id="taskList" class="task-container">
             <div style="padding: 20px; text-align: center; color: #666;">Loading tasks...</div>
         </div>
@@ -46,6 +47,7 @@
             <h3>Sleep & Wake</h3>
             <div class="chart-container"><canvas id="timeChart"></canvas></div>
         </div>
+        <div id="dynamicChartsContainer"></div>
         <div style="height: 100px;"></div>
     </div>
 
@@ -85,11 +87,11 @@
         <div class="row">
             <div>
                 <label>Weight</label>
-                <input type="number" id="inpWeight" value="10">
+                <input type="number" id="inpWeight" value="10" class="full-width">
             </div>
             <div>
                 <label>Type</label>
-                <select id="inpType">
+                <select id="inpType" class="full-width">
                     <option value="bool">Checkbox</option>
                     <option value="time">Time</option>
                     <option value="score">Score</option>
@@ -126,6 +128,19 @@
                 <option value="before">Before Target</option>
                 <option value="after">After Target</option>
             </select>
+        </div>
+
+        <div id="scoreFields" style="display:none; margin-bottom:15px; padding: 15px; background:rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid #334155;">
+            <div style="margin-bottom: 10px;">
+                <label>Max Score (Out of)</label>
+                <input type="number" id="inpMaxScore" class="full-width" value="100">
+            </div>
+            <label style="display:flex; align-items:center; gap:5px; margin-bottom: 10px;">
+                <input type="checkbox" id="inpAllowOverflow" style="width:20px; height:20px;"> Allow score to overflow max (>100%)
+            </label>
+            <label style="display:flex; align-items:center; gap:5px;">
+                <input type="checkbox" id="inpTrackStats" style="width:20px; height:20px;"> Track in Stats (Graph)
+            </label>
         </div>
 
         <div class="modal-actions">

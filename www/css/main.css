@@ -21,10 +21,9 @@ body {
     overflow: hidden;
 }
 
-/* HEADER - FIXED FOR STATUS BAR */
+/* header */
 .app-header {
     background: var(--bg-card);
-    /* This pushes content down below the notch/status bar */
     padding-top: env(safe-area-inset-top, 25px);
     padding-bottom: 15px;
     padding-left: 15px;
@@ -38,7 +37,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 10px; /* Extra breathing room below status bar */
+    margin-top: 10px;
 }
 
 .date-nav {
@@ -72,7 +71,7 @@ body {
     text-align: right;
 }
 
-/* CONTENT AREA */
+/* content */
 .app-content {
     flex: 1;
     overflow-y: auto;
@@ -81,7 +80,7 @@ body {
     position: relative;
 }
 
-/* TASK CARDS */
+/* cards */
 .task-card {
     background: var(--bg-card);
     border-radius: 12px;
@@ -98,7 +97,7 @@ body {
 .task-name { font-weight: 600; font-size: 1rem; }
 .task-meta { font-size: 0.75rem; color: var(--text-muted); }
 
-/* CONTROLS */
+/* controls */
 .toggle-switch {
     position: relative;
     display: inline-block;
@@ -128,18 +127,19 @@ body {
 input:checked + .slider { background-color: var(--accent); }
 input:checked + .slider:before { transform: translateX(22px); }
 
-/* Inputs */
+/* inputs */
 input, select {
     background: #0f172a;
     border: 1px solid #334155;
     color: white;
-    padding: 8px;
-    border-radius: 6px;
-    font-size: 1rem;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 1.1rem;
     color-scheme: dark;
+    width: auto;
 }
 
-/* BOTTOM NAV */
+/* nav */
 .bottom-nav {
     position: fixed;
     bottom: 0; left: 0; right: 0;
@@ -150,7 +150,7 @@ input, select {
     align-items: center;
     border-top: 1px solid #334155;
     z-index: 100;
-    padding-bottom: env(safe-area-inset-bottom, 0px); /* For iPhone X+ and newer Androids */
+    padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 .nav-item {
@@ -168,7 +168,7 @@ input, select {
 .nav-item.active { color: var(--accent); }
 .nav-item .icon { font-size: 1.2rem; }
 
-/* SETTINGS HEADER */
+/* settings */
 .settings-header {
     display: flex;
     justify-content: space-between;
@@ -176,7 +176,7 @@ input, select {
     margin-bottom: 20px;
 }
 
-/* CHARTS */
+/* charts */
 .chart-card {
     background: var(--bg-card);
     border-radius: 12px;
@@ -186,7 +186,7 @@ input, select {
 }
 .chart-container { position: relative; height: 240px; }
 
-/* MODAL */
+/* modal */
 .modal-overlay {
     display: none;
     position: fixed;
@@ -238,7 +238,6 @@ input, select {
 .btn-sec { background: transparent; border: 1px solid var(--text-muted); color: var(--text-muted); padding: 10px 20px; border-radius: 6px; }
 .btn-primary { background: var(--accent); color: #000; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; }
 
-/* --- ACADEMIC SECTION --- */
 .academic-header {
     display: flex;
     justify-content: space-between;
@@ -269,7 +268,6 @@ input, select {
     color: #ff4444;
 }
 
-/* Complex Input Row (Score / Total + Btn) */
 .input-group {
     display: flex;
     gap: 5px;
@@ -297,18 +295,18 @@ input, select {
     cursor: pointer;
 }
 
-/* Stats */
+/* stats */
 .chart-scroll-container {
     display: flex;
     flex-direction: column;
     gap: 20px;
 }
 
-/* --- CRITICAL GRAPH FIXES --- */
+/* graph */
 .chart-container {
     position: relative;
     width: 100%;
-    height: 300px; /* Mandatory height */
+    height: 300px;
     min-height: 300px;
 }
 
@@ -322,7 +320,6 @@ input, select {
     flex-direction: column;
 }
 
-/* Academic Styles */
 .academic-header {
     display: flex;
     justify-content: space-between;

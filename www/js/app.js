@@ -1,6 +1,6 @@
 console.log("App.js Loaded. New Version.");
 
-// --- CONFIG ---
+// config
 const CURR_YEAR = new Date().getFullYear();
 const DEFAULT_START = `${CURR_YEAR}-01-01`;
 const DEFAULT_END = `${CURR_YEAR}-12-31`;
@@ -13,12 +13,12 @@ const DEFAULT_CONFIG = [
 {name: "Sleep", type: "time", weight: 20, target: "23:00", condition: "before", days: "Mon,Tue,Wed,Thu,Fri,Sat,Sun", startDate: DEFAULT_START, endDate: DEFAULT_END}
 ];
 
-// --- STATE ---
+// state
 let appData = {};
 let appConfig = [];
 let currentView = 'tasks';
 let taskDate = new Date();
-let statsDate = new Date(); // Tracks the currently viewed week
+let statsDate = new Date(); // week
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (e) { console.error(e); }
 });
 
-// --- DATA ---
+// data
 async function loadData() {
     try {
         const localData = localStorage.getItem('fg_data');
@@ -47,13 +47,11 @@ async function saveData() {
     localStorage.setItem('fg_config', JSON.stringify(appConfig));
 }
 
-// --- NAVIGATION ---
+// nav
 function setupNavigation() {
-    // Arrows
     document.getElementById('btnPrev').onclick = () => handleNav(-1);
     document.getElementById('btnNext').onclick = () => handleNav(1);
 
-    // Tabs
     const tabs = document.querySelectorAll('.nav-item');
     tabs.forEach(tab => {
         tab.onclick = () => {
@@ -77,9 +75,9 @@ function setupNavigation() {
             }
             else if(targetId === 'viewStats') {
                 currentView = 'stats';
-                navHeader.style.display = 'flex'; // ARROWS ON
+                navHeader.style.display = 'flex';
                 staticTitle.style.display = 'none';
-                scoreDisplay.style.visibility = 'hidden'; // Hide score in header for stats
+                scoreDisplay.style.visibility = 'hidden';
                 renderCharts();
             }
             else {
@@ -105,7 +103,7 @@ function handleNav(dir) {
     }
 }
 
-// --- HELPERS ---
+// helpers
 function formatDateKey(d) {
     const offset = d.getTimezoneOffset();
     const local = new Date(d.getTime() - (offset*60*1000));
@@ -119,19 +117,45 @@ function getMonday(d) {
     return new Date(date.setDate(diff));
 }
 
-// --- TASK VIEW ---
+// tasks
 function renderDayView() {
     const dateKey = formatDateKey(taskDate);
     const dayShort = taskDate.toLocaleDateString('en-US', {weekday: 'short'});
     const todayKey = formatDateKey(new Date());
 
-    // Update Header
     document.getElementById('lblMain').innerText = (todayKey === dateKey) ? "Today" : dayShort;
     document.getElementById('lblSub').innerText = taskDate.toLocaleDateString(undefined, {month:'long', day:'numeric'});
 
-    // Score
     const stats = calculateStats(dateKey);
     document.getElementById('headerScore').innerText = Math.round(stats.pct) + "%";
+
+    // sleep
+    const prevDate = new Date(taskDate);
+    prevDate.setDate(taskDate.getDate() - 1);
+    const prevDateKey = formatDateKey(prevDate);
+    
+    let sleepDurHtml = '';
+    let sleepTaskName = appConfig.find(t => t.name.toLowerCase().includes('sleep'))?.name;
+    let wakeTaskName = appConfig.find(t => t.name.toLowerCase().includes('wake'))?.name;
+    
+    if (sleepTaskName && wakeTaskName) {
+        const sTime = appData[prevDateKey]?.[sleepTaskName];
+        const wTime = appData[dateKey]?.[wakeTaskName];
+        if (sTime && wTime) {
+            let sHrs = parseTime(sTime);
+            let wHrs = parseTime(wTime);
+            let duration = (24 - sHrs) + wHrs;
+            if (sHrs < 12) duration = wHrs - sHrs; // past midnight
+            if (duration < 0) duration += 24;
+
+            const hrs = Math.floor(duration);
+            const mins = Math.round((duration - hrs) * 60);
+            sleepDurHtml = `<div style="background:rgba(255,255,255,0.1); padding: 8px 15px; border-radius: 20px; font-size: 0.9rem;">🌙 Sleep: <b>${hrs}h ${mins}m</b></div>`;
+        }
+    }
+    
+    const indicatorsContainer = document.getElementById('dailyIndicators');
+    if (indicatorsContainer) indicatorsContainer.innerHTML = sleepDurHtml;
 
     const container = document.getElementById('taskList');
     container.innerHTML = '';
@@ -161,7 +185,8 @@ function renderDayView() {
         } else if(task.type === 'time') {
             inputHtml = `<input type="time" value="${val||''}" onchange="updateValue('${dateKey}','${task.name}',this.value)">`;
         } else {
-            inputHtml = `<input type="number" placeholder="-" value="${val||''}" style="width:50px" onchange="updateValue('${dateKey}','${task.name}',this.value)">`;
+            const maxText = (task.type === 'score') ? ` / ${task.maxScore || 100}` : '';
+            inputHtml = `<div style="display:flex; align-items:center; gap:5px;"><input type="number" placeholder="-" value="${val||''}" style="width:70px; text-align:center;" onchange="updateValue('${dateKey}','${task.name}',this.value)"> <span style="font-size:0.9rem; color:var(--text-muted);">${maxText}</span></div>`;
         }
 
         card.innerHTML = `<div class="task-info"><span class="task-name">${task.name}</span><span class="task-meta">${task.weight} pts</span></div><div>${inputHtml}</div>`;
@@ -178,24 +203,44 @@ window.updateValue = function(key, name, val) {
     document.getElementById('headerScore').innerText = Math.round(calculateStats(key).pct) + "%";
 }
 
-// --- STATS VIEW (WEEKLY) ---
+// stats
 function renderCharts() {
     if (typeof Chart === 'undefined') return;
     const ctxScore = document.getElementById('scoreChart').getContext('2d');
     const ctxTime = document.getElementById('timeChart').getContext('2d');
 
-    // 1. Get Range
     const monday = getMonday(statsDate);
     const sunday = new Date(monday);
     sunday.setDate(monday.getDate() + 6);
 
-    // 2. Update Header (Jan 12 - Jan 18)
     const fmt = (d) => d.toLocaleDateString(undefined, {month:'short', day:'numeric'});
     document.getElementById('lblMain').innerText = `${fmt(monday)} - ${fmt(sunday)}`;
     document.getElementById('lblSub').innerText = "Weekly Stats";
 
-    // 3. Generate Data
-    const labels=[], scores=[], wakes=[], sleeps=[];
+    const labels=[], scores=[];
+    const trackedDatasetsMap = {};
+    const sleepWakeMap = {};
+
+    appConfig.forEach(t => {
+        const tLower = t.name.toLowerCase();
+        const isSleepWake = tLower.includes('sleep') || tLower.includes('wake');
+        
+        if (isSleepWake) {
+            sleepWakeMap[t.name] = {
+                label: t.name,
+                data: [],
+                borderColor: `hsl(${Math.random() * 360}, 70%, 50%)`,
+                tension: 0.3
+            };
+        } else if (t.type === 'time' || (t.type === 'score' && t.trackStats)) {
+            trackedDatasetsMap[t.name] = {
+                label: t.name,
+                data: [],
+                borderColor: `hsl(${Math.random() * 360}, 70%, 50%)`, // color
+                tension: 0.3
+            };
+        }
+    });
 
     for(let i=0; i<7; i++) {
         const d = new Date(monday);
@@ -205,18 +250,36 @@ function renderCharts() {
         labels.push(d.toLocaleDateString('en-US', {weekday:'short'}));
         scores.push(calculateStats(key).pct);
 
-        let w=null, s=null;
         appConfig.forEach(t => {
-            if(appData[key]?.[t.name] && t.type==='time') {
-                const h = parseTime(appData[key][t.name]);
-                if(t.name.toLowerCase().includes('wake')) w=h;
-                if(t.name.toLowerCase().includes('sleep')) s=h<12?h+24:h;
+            const tLower = t.name.toLowerCase();
+            const isSleepWake = tLower.includes('sleep') || tLower.includes('wake');
+            
+            if (isSleepWake) {
+                let val = null;
+                if (appData[key]?.[t.name]) {
+                    val = parseTime(appData[key][t.name]);
+                    // crossover fix
+                    if (tLower.includes('sleep') && val !== null && val < 12) {
+                        val += 24;
+                    }
+                }
+                sleepWakeMap[t.name].data.push(val);
+            } else if (t.type === 'time' || (t.type === 'score' && t.trackStats)) {
+                let val = null;
+                if (appData[key]?.[t.name]) {
+                    if (t.type === 'time') {
+                        val = parseTime(appData[key][t.name]);
+                    } else if (t.type === 'score') {
+                        val = parseFloat(appData[key][t.name]);
+                        if (isNaN(val)) val = null;
+                    }
+                }
+                trackedDatasetsMap[t.name].data.push(val);
             }
         });
-        wakes.push(w); sleeps.push(s);
     }
 
-    // 4. Render
+    // render
     if(window.chartS) window.chartS.destroy();
     window.chartS = new Chart(ctxScore, {
         type:'line',
@@ -227,12 +290,48 @@ function renderCharts() {
     if(window.chartT) window.chartT.destroy();
     window.chartT = new Chart(ctxTime, {
         type:'line',
-        data:{labels, datasets:[{label:'Wake', data:wakes, borderColor:'#06b6d4'},{label:'Sleep', data:sleeps, borderColor:'#8b5cf6'}]},
-        options:{maintainAspectRatio:false}
+        data:{labels, datasets: Object.values(sleepWakeMap)},
+        options:{
+            maintainAspectRatio:false,
+            scales: {
+                y: {
+                    ticks: {
+                        callback: function(value) {
+                            let h = Math.floor(value) % 24;
+                            return h.toString().padStart(2, '0') + ":00";
+                        }
+                    }
+                }
+            }
+        }
     });
+
+    const dynContainer = document.getElementById('dynamicChartsContainer');
+    if (dynContainer) {
+        dynContainer.innerHTML = '';
+        if (window.dynamicCharts) {
+            window.dynamicCharts.forEach(c => c.destroy());
+        }
+        window.dynamicCharts = [];
+
+        Object.values(trackedDatasetsMap).forEach((ds, idx) => {
+            const card = document.createElement('div');
+            card.className = 'chart-card';
+            card.innerHTML = `<h3>${ds.label}</h3><div class="chart-container"><canvas id="dynChart_${idx}"></canvas></div>`;
+            dynContainer.appendChild(card);
+
+            const ctx = document.getElementById(`dynChart_${idx}`).getContext('2d');
+            const c = new Chart(ctx, {
+                type: 'line',
+                data: { labels, datasets: [ds] },
+                options: { maintainAspectRatio: false }
+            });
+            window.dynamicCharts.push(c);
+        });
+    }
 }
 
-// --- CALC ---
+// calc
 function parseTime(val) {
     if (!val) return null;
     const parts = val.split(':');
@@ -259,7 +358,18 @@ function calculateStats(dateKey) {
         if(!val) return;
 
         if(task.type === 'bool') earned += parseInt(task.weight);
-        else if(task.type === 'score') earned += (Math.min(100, Math.max(0, parseFloat(val)))/100)*task.weight;
+        else if(task.type === 'score') {
+            let sVal = parseFloat(val);
+            if (!isNaN(sVal)) {
+                const max = task.maxScore || 100;
+                if (!task.allowOverflow) {
+                    sVal = Math.min(max, Math.max(0, sVal));
+                } else {
+                    sVal = Math.max(0, sVal);
+                }
+                earned += (sVal / max) * task.weight;
+            }
+        }
         else if(task.type === 'time') {
             const h = parseTime(val);
             const target = parseTime(task.target);
@@ -277,13 +387,16 @@ function calculateStats(dateKey) {
     return { pct: total===0 ? 0 : (earned/total)*100 };
 }
 
-// --- MODAL & SCHEDULE ---
+// modal
 function setupModalLogic() {
     document.getElementById('btnCancelForm').onclick = () => document.getElementById('configModal').style.display = 'none';
     document.getElementById('btnSaveTask').onclick = saveTaskFromModal;
 
     document.getElementById('inpType').onchange = () => {
-        document.getElementById('timeFields').style.display = (document.getElementById('inpType').value === 'time') ? 'block' : 'none';
+        const tVal = document.getElementById('inpType').value;
+        document.getElementById('timeFields').style.display = (tVal === 'time') ? 'block' : 'none';
+        const sFields = document.getElementById('scoreFields');
+        if (sFields) sFields.style.display = (tVal === 'score') ? 'block' : 'none';
     };
 
     const radioRepeat = document.getElementById('radioRepeat');
@@ -302,7 +415,7 @@ function openEditModal(idx) {
     const modal = document.getElementById('configModal');
     document.getElementById('editIndex').value = idx;
 
-    // Default Reset
+    // default
     document.getElementById('radioRepeat').checked = true;
     document.querySelectorAll('.day-opt').forEach(b => b.classList.add('sel'));
 
@@ -319,6 +432,16 @@ function openEditModal(idx) {
         document.getElementById('inpWeight').value = t.weight;
         document.getElementById('inpType').value = t.type;
         document.getElementById('inpTarget').value = t.target || "";
+        if (t.condition) {
+            document.getElementById('inpCondition').value = t.condition;
+        }
+        
+        const trkStats = document.getElementById('inpTrackStats');
+        if (trkStats) trkStats.checked = !!t.trackStats;
+        const maxScoreEl = document.getElementById('inpMaxScore');
+        if (maxScoreEl) maxScoreEl.value = t.maxScore || 100;
+        const overflowEl = document.getElementById('inpAllowOverflow');
+        if (overflowEl) overflowEl.checked = !!t.allowOverflow;
 
         if(t.startDate === t.endDate && t.startDate) {
             document.getElementById('radioOnce').checked = true;
@@ -361,22 +484,43 @@ function saveTaskFromModal() {
         days = selDays.join(',');
     }
 
+    const trackStatsEl = document.getElementById('inpTrackStats');
+    const maxScoreEl = document.getElementById('inpMaxScore');
+    const overflowEl = document.getElementById('inpAllowOverflow');
+    
     const newTask = {
         name,
         weight: parseInt(document.getElementById('inpWeight').value),
         type: document.getElementById('inpType').value,
         target: document.getElementById('inpTarget').value,
         condition: document.getElementById('inpCondition').value,
+        trackStats: trackStatsEl ? trackStatsEl.checked : false,
+        maxScore: maxScoreEl ? parseFloat(maxScoreEl.value) || 100 : 100,
+        allowOverflow: overflowEl ? overflowEl.checked : false,
         startDate: start, endDate: end, days: days
     };
 
-    if (idx === -1) appConfig.push(newTask);
-    else appConfig[idx] = newTask;
+    if (idx === -1) {
+        appConfig.push(newTask);
+    } else {
+        const oldName = appConfig[idx].name;
+        appConfig[idx] = newTask;
+        
+        // migrate
+        if (oldName !== name) {
+            Object.keys(appData).forEach(date => {
+                if (appData[date][oldName] !== undefined) {
+                    appData[date][name] = appData[date][oldName];
+                    delete appData[date][oldName];
+                }
+            });
+        }
+    }
 
     saveData();
     document.getElementById('configModal').style.display = 'none';
 
-    // Refresh View
+    // refresh
     if(currentView === 'tasks') renderDayView();
     if(currentView === 'stats') renderCharts();
     if(currentView === 'settings') renderSettingsList();
